@@ -1,0 +1,15 @@
+# Ignorar directorios de entorno virtual
+virtualenv/
+venv/
+.venv/
+
+# Ignorar archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Ignorar archivos de datos temporales
+*.tmp
+*.temp
+
+# Ignorar archivo de variables de entorno
+.env

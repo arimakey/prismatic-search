@@ -1,0 +1,9 @@
+openai
+requests
+beautifulsoup4
+lxml
+rich
+python-dotenv
+typer[all]
+httpx
+fake-useragent
