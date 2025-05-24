@@ -101,27 +101,3 @@ def count_scopus_articles(query, start_date, end_date, project_name, api_key, fi
         return total
     else:
         return None
-
-# Ejemplo de uso:
-if __name__ == "__main__":
-    start = "2018"  # Example of year as string
-    end = "2020"    # Example of year as string
-    consulta = '("Impact of M2M Technologies on Cost Management in Supply Chains" OR "Impacto de las tecnologías M2M en la gestión de costos en cadenas de suministro") AND (automatización OR "visibilidad en tiempo real" OR "optimización de procesos" OR "eficiencia logística" OR "reducción de errores" OR "gestión de inventario" OR "mantenimiento predictivo" OR "optimización de recursos" OR "beneficios económicos" OR desafíos OR implementación OR "estructura de costos")'
-
-    total_google = count_google_scholar_articles(consulta, start, end, project_name, None, filters=['en', 'es'])
-    if total_google is not None:
-        print(f"Google Académico: {total_google} artículos encontrados.")
-    else:
-        print("No se pudo obtener la cantidad de Google Académico.")
-
-    # Personaliza tu API Key para Scopus.
-    API_KEY_SCOPUS = "ddbd21300a00b5f5da2d75c7f33a7cac"
-    total_scopus = count_scopus_articles(consulta, start, end, project_name, API_KEY_SCOPUS, filters=['ar', 'cp'])
-    if total_scopus is not None:
-        print(f"Scopus: {total_scopus} artículos encontrados.")
-    else:
-        print("Ocurrió un error al conectar con la API de Scopus.")
-
-    from utils.file_utils import save_data_to_file
-    results = f"Google Scholar: {total_google} articles found.\\nScopus: {total_scopus} articles found."
-    save_data_to_file(project_name, "search_results.txt", results)
