@@ -4,6 +4,8 @@ from rich.table import Table
 from rich import box
 import questionary
 from core import api
+from utils.file_utils import save_data_to_file
+from utils.console_formatter import print_formatted_text
 
 load_dotenv()
 console = Console()
@@ -53,18 +55,18 @@ def parse_generated_content(content):
                     title = line.replace("1.", "").replace("- ", "").replace("•", "").strip()
                     formatted_line = f"{item_number}. [bold magenta]{title}[/bold magenta]"
             # Subelementos secundarios con viñeta
-            elif line.startswith(("-", "•")) or line.startswith(("  -", "\t-")):
+            elif line.startswith(("-", "•")) or line.startswith(("  -", "\\t-")):
                 formatted_line = f"   - {line.lstrip('-• ').strip()}"
             else:
                 # Continuación o línea sin formato claro
                 formatted_line = f"   {line}"
 
             # Concatenar con salto de línea
-            sections[current_section] += "\n" + formatted_line if sections[current_section] else formatted_line
+            sections[current_section] += "\\n" + formatted_line if sections[current_section] else formatted_line
 
     return sections
 
-def generate_criteria(title, context_additional):
+def generate_criteria(title, context_additional, project_name):
     """
     Solicita criterios al usuario y genera criterios estructurados para una revisión sistemática.
     """
@@ -162,14 +164,14 @@ def generate_criteria(title, context_additional):
             "content": (
                 "Eres un asistente experto en metodología científica especializado en revisiones sistemáticas. "
                 "Genera criterios de inclusión y exclusión estructurados, precisos y académicos para una revisión sistemática "
-                "basándote en la información proporcionada. Organiza tu respuesta en exactamente tres secciones con los siguientes títulos:\n"
-                "1. 'Criterios de inclusión'\n"
-                "2. 'Criterios de exclusión'\n"
-                "3. 'Filtros metodológicos'\n\n"
-                "Para cada sección:\n"
-                "- Enumera puntos principales numerados con títulos en negrita seguidos de dos puntos (ejemplo: '1. [bold magenta]Población[/bold magenta]: Adultos mayores de 65 años')\n"
-                "- Bajo cada punto principal, usa guiones para listar subelementos específicos\n"
-                "- Utiliza un formato consistente y lenguaje académico preciso\n"
+                "basándote en la información proporcionada. Organiza tu respuesta en exactamente tres secciones con los siguientes títulos:\\n"
+                "1. 'Criterios de inclusión'\\n"
+                "2. 'Criterios de exclusión'\\n"
+                "3. 'Filtros metodológicos'\\n\\n"
+                "Para cada sección:\\n"
+                "- Enumera puntos principales numerados con títulos en negrita seguidos de dos puntos (ejemplo: '1. [bold magenta]Población[/bold magenta]: Adultos mayores de 65 años')\\n"
+                "- Bajo cada punto principal, usa guiones para listar subelementos específicos\\n"
+                "- Utiliza un formato consistente y lenguaje académico preciso\\n"
                 "- Incluye una nota breve al final que resuma el enfoque metodológico"
             )
         },
@@ -177,6 +179,8 @@ def generate_criteria(title, context_additional):
     ]
     
     generated = api.get_completion(conversation)
+    
+    save_data_to_file(project_name, "criteria.txt", generated)
 
     # Mostrar resultados en una tabla con estilo mejorado
     table = Table(
@@ -190,12 +194,12 @@ def generate_criteria(title, context_additional):
     table.add_column("Criterios", style="bright_magenta", justify="left")
 
     sections = parse_generated_content(generated)
-    table.add_row("Criterios de inclusión", sections.get("inclusión", ""))
-    table.add_row("Criterios de exclusión", sections.get("exclusión", ""))
-    table.add_row("Filtros metodológicos", sections.get("filtros", ""))
+    table.add_row("Criterios de inclusión", sections.get("inclusión", "") or "")
+    table.add_row("Criterios de exclusión", sections.get("exclusión", "") or "")
+    table.add_row("Filtros metodológicos", sections.get("filtros", "") or "")
 
     console.width = min(console.width, 120)
-    console.print(table)
+    print_formatted_text(table)
 
     return {
         "titulo": title,

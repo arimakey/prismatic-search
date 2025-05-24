@@ -2,11 +2,13 @@ from dotenv import load_dotenv
 from rich.console import Console
 from core import api
 from rich.table import Table
+from utils.file_utils import save_data_to_file
+from utils.console_formatter import print_formatted_text
 
 load_dotenv()
 console = Console()
 
-def generate_title(context):
+def generate_title(context, project_name):
     while True:
         # Genera el título en español
         conversation_es = [
@@ -45,6 +47,8 @@ def generate_title(context):
         # Pregunta al usuario si le gusta el título
         confirm = input("¿Te gusta el título? (si/no): ").strip().lower()
         if confirm == "si":
+            save_data_to_file(project_name, "title_es.txt", title_es)
+            save_data_to_file(project_name, "title_en.txt", title_en)
             return {"es": title_es, "en": title_en}
         elif confirm != "no":
-            console.print("[bold yellow]Entrada inválida. Por favor, escribe 'si' o 'no'.[/bold yellow]")
+            print_formatted_text("[bold yellow]Entrada inválida. Por favor, escribe 'si' o 'no'.[/bold yellow]")
