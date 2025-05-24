@@ -16,5 +16,7 @@ def print_formatted_text(text):
     """
     Prints formatted text to the console using rich.
     """
+    if hasattr(text, '__str__'):
+        text = str(text)
     formatted_text = format_text(text)
     console.print(formatted_text)

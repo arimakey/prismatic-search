@@ -7,3 +7,5 @@ python-dotenv
 typer[all]
 httpx
 fake-useragent
+deepl
+questionary

@@ -3,12 +3,11 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-# Función para contar artículos en Google Académico usando scraping.
-def count_google_scholar_articles(query, start_date, end_date, project_name, criteria):
+def count_google_scholar_articles(query, start_date, end_date, project_name, api_key, filters=None):
     """
-    Busca en Google Académico la cantidad de artículos que contengan 'query'
-    publicados entre start_date y end_date usando scraping.
-    start_date y end_date deben ser objetos datetime.date.
+    Search Google Scholar for articles containing 'query' published between start_date and end_date using web scraping.
+    start_date and end_date can be None, 'Sin restricción', 'Presente' or year strings.
+    filters: Optional list of language codes (e.g. ['en', 'es'])
     """
     url = "https://scholar.google.com/scholar"
     params = {
@@ -22,14 +21,15 @@ def count_google_scholar_articles(query, start_date, end_date, project_name, cri
                        "Chrome/92.0.4515.131 Safari/537.36")
     }
     
-    # Add criteria to the query
-    if criteria:
-        if criteria.get("idiomas"):
-            params["lr"] = "lang_" + "|lang_".join(criteria["idiomas"])
-        if criteria.get("año_mínimo"):
-            params["as_ylo"] = criteria["año_mínimo"]
-        if criteria.get("año_máximo"):
-            params["as_yhi"] = criteria["año_máximo"]
+    # Add language filter if specified
+    if filters:
+        params["lr"] = "lang_" + "|".join(filters)
+        
+    # Add date parameters if provided
+    if start_date and start_date != 'Sin restricción':
+        params["as_ylo"] = start_date
+    if end_date and end_date != 'Presente':
+        params["as_yhi"] = end_date
 
     response = requests.get(url, params=params, headers=headers)
     if response.status_code != 200:
@@ -53,14 +53,14 @@ def count_google_scholar_articles(query, start_date, end_date, project_name, cri
                 count = 0
     return count
 
-# Función para contar artículos en Scopus utilizando su API.
-def count_scopus_articles(query, start_date, end_date, api_key, project_name, criteria):
+def count_scopus_articles(query, start_date, end_date, project_name, api_key, filters=None):
     """
-    Busca en Scopus la cantidad de artículos que contengan 'query'
-    publicados entre start_date y end_date utilizando la API de Scopus.
+    Search Scopus for articles containing 'query' published between start_date and end_date using Scopus API.
     
-    start_date y end_date deben ser objetos datetime.date.
-    api_key es tu clave de API de Elsevier.
+    start_date can be 'Sin restricción' or year string
+    end_date can be 'Presente' or year string
+    api_key: Elsevier API key
+    filters: Optional list of document types (e.g. ['ar', 'cp'])
     """
     url = "https://api.elsevier.com/content/search/scopus"
     headers = {
@@ -68,29 +68,26 @@ def count_scopus_articles(query, start_date, end_date, api_key, project_name, cr
         "Accept": "application/json"
     }
     
-    # Construimos el filtro de fechas. Scopus utiliza el campo "PUBYEAR"
+    # Build date filter using PUBYEAR
     query_filter = ""
-    if criteria:
-        if criteria.get("año_mínimo"):
-            query_filter += f"PUBYEAR > {int(criteria['año_mínimo']) - 1} AND "
-        if criteria.get("año_máximo"):
-            query_filter += f"PUBYEAR < {int(criteria['año_máximo']) + 1} AND "
+    if start_date and start_date != 'Sin restricción':
+        query_filter += f"PUBYEAR > {int(start_date) - 1} AND "
+    if end_date and end_date != 'Presente':
+        query_filter += f"PUBYEAR < {int(end_date) + 1} AND "
     query_filter = query_filter.rstrip(" AND ")
     
     full_query = query
     if query_filter:
         full_query += f" AND {query_filter}"
     
-    # Add criteria to the query
-    if criteria:
-        if criteria.get("tipos_estudio"):
-            study_types_filter = " OR ".join([f"DOCTYPE({st})" for st in criteria["tipos_estudio"]])
-            full_query += f" AND ({study_types_filter})"
+    # Add document type filter if specified
+    if filters:
+        doc_types_filter = " OR ".join([f"DOCTYPE({dt})" for dt in filters])
+        full_query += f" AND ({doc_types_filter})"
             
-    # Parámetros de la solicitud.
     params = {
         "query": full_query,
-        "count": 0  # No necesitamos los registros, solamente el total.
+        "count": 0  # We only need the total count
     }
     
     response = requests.get(url, headers=headers, params=params)
@@ -107,11 +104,11 @@ def count_scopus_articles(query, start_date, end_date, api_key, project_name, cr
 
 # Ejemplo de uso:
 if __name__ == "__main__":
-    start = datetime.date(2018, 1, 1)
-    end = datetime.date(2020, 12, 31)
+    start = "2018"  # Example of year as string
+    end = "2020"    # Example of year as string
     consulta = '("Impact of M2M Technologies on Cost Management in Supply Chains" OR "Impacto de las tecnologías M2M en la gestión de costos en cadenas de suministro") AND (automatización OR "visibilidad en tiempo real" OR "optimización de procesos" OR "eficiencia logística" OR "reducción de errores" OR "gestión de inventario" OR "mantenimiento predictivo" OR "optimización de recursos" OR "beneficios económicos" OR desafíos OR implementación OR "estructura de costos")'
 
-    total_google = count_google_scholar_articles(consulta, start, end, project_name)
+    total_google = count_google_scholar_articles(consulta, start, end, project_name, None, filters=['en', 'es'])
     if total_google is not None:
         print(f"Google Académico: {total_google} artículos encontrados.")
     else:
@@ -119,7 +116,7 @@ if __name__ == "__main__":
 
     # Personaliza tu API Key para Scopus.
     API_KEY_SCOPUS = "ddbd21300a00b5f5da2d75c7f33a7cac"
-    total_scopus = count_scopus_articles(consulta, start, end, API_KEY_SCOPUS, project_name)
+    total_scopus = count_scopus_articles(consulta, start, end, project_name, API_KEY_SCOPUS, filters=['ar', 'cp'])
     if total_scopus is not None:
         print(f"Scopus: {total_scopus} artículos encontrados.")
     else:

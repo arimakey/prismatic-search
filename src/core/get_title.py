@@ -4,9 +4,14 @@ from core import api
 from rich.table import Table
 from utils.file_utils import save_data_to_file
 from utils.console_formatter import print_formatted_text
+import deepl
+import os
 
 load_dotenv()
 console = Console()
+
+# Inicializar el cliente de DeepL
+deepL_translator = deepl.Translator(auth_key=os.getenv("DEEPL_API_KEY"))
 
 def generate_title(context, project_name):
     while True:
@@ -23,18 +28,24 @@ def generate_title(context, project_name):
         ]
         title_es = api.get_completion(conversation_es)
 
-        # Traduce el título al inglés
-        conversation_en = [
-            {
-                "role": "system",
-                "content": "Traduce el siguiente título al inglés. Solo dame el título en inglés, sin explicaciones adicionales."
-            },
-            {
-                "role": "user",
-                "content": title_es
-            }
-        ]
-        title_en = api.get_completion(conversation_en)
+        # Traduce el título al inglés usando DeepL
+        try:
+            result = deepL_translator.translate_text(title_es, source_lang="ES", target_lang="EN-US")
+            title_en = result.text
+        except Exception as e:
+            console.print(f"\n[bold red]Error al traducir con DeepL: {str(e)}[/bold red]")
+            # Fallback a la API de IA si DeepL falla
+            conversation_en = [
+                {
+                    "role": "system",
+                    "content": "Traduce el siguiente título al inglés. Solo dame el título en inglés, sin explicaciones adicionales."
+                },
+                {
+                    "role": "user",
+                    "content": title_es
+                }
+            ]
+            title_en = api.get_completion(conversation_en)
 
         # Muestra ambos títulos en una tabla de una sola columna, uno arriba del otro
         table = Table(title="Títulos Generados")
