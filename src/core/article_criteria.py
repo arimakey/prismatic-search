@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import re
-from core import api
+from agents import api
 from utils.file_utils import save_data_to_file
 from utils.console_formatter import print_formatted_text
 

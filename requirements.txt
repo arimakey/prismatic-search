@@ -10,3 +10,5 @@ fake-useragent
 deepl
 questionary
 selenium
+PyPDF2
+pandas

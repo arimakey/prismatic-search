@@ -13,3 +13,5 @@ __pycache__/
 
 # Ignorar archivo de variables de entorno
 .env
+
+.env.local

@@ -1,5 +1,5 @@
 from rich.console import Console
-from core import api
+from agents import api
 import re
 
 console = Console()
@@ -53,4 +53,10 @@ def delimit_topic_context():
 
     console.print("[bold green]\nContexto generado:[/bold green]")
     console.print(context_generated)
+    
+    context = """Esta revisión sistemática explora el impacto de la comunicación máquina a máquina (M2M) en las cadenas de suministro, centrándose en su influencia en la eficiencia operativa, la visibilidad en tiempo real, la
+                reducción de costos y la sostenibilidad. Se analizan las aplicaciones clave de M2M en logística, gestión de inventarios y trazabilidad, evaluando cómo su implementación optimiza procesos, mejora la toma de
+                decisiones y reduce errores humanos. Además, se discuten los desafíos técnicos y organizacionales asociados con su adopción."""
+    
+    console.print(context)
     return context_generated

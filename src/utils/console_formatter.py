@@ -20,3 +20,26 @@ def print_formatted_text(text):
         text = str(text)
     formatted_text = format_text(text)
     console.print(formatted_text)
+
+def print_table(data):
+    """
+    Prints data in a table format to the console using rich.
+    Data should be a list of lists, where the first list is the header.
+    """
+    from rich.table import Table
+
+    table = Table(title="Search Results")
+
+    if not data:
+        console.print("No data to display.")
+        return
+
+    # Add columns from the header row
+    for header in data[0]:
+        table.add_column(header)
+
+    # Add rows from the rest of the data
+    for row in data[1:]:
+        table.add_row(*row)
+
+    console.print(table)

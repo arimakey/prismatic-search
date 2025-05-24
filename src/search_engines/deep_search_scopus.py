@@ -13,7 +13,7 @@ def download_scopus_articles(query, max_results=1000, project_name="prismatic-se
 
     articles = []
     start = 0
-    count = 25  # máximo permitido por llamada
+    count = 25
 
     while start < max_results:
         params = {
@@ -29,6 +29,7 @@ def download_scopus_articles(query, max_results=1000, project_name="prismatic-se
 
         data = response.json()
         entries = data.get("search-results", {}).get("entry", [])
+
         if not entries:
             break
 
@@ -36,16 +37,20 @@ def download_scopus_articles(query, max_results=1000, project_name="prismatic-se
             articles.append({
                 "title": entry.get("dc:title", ""),
                 "creator": entry.get("dc:creator", ""),
-                "publicationName": entry.get("prism:publicationName", ""),
+                "type": entry.get("prism:aggregationType", ""),
+                "url": entry.get("link", [])[0].get("@href", "") if entry.get("link") else "",
                 "coverDate": entry.get("prism:coverDate", ""),
+                "citedbyCount": entry.get("citedby-count", ""),
+                "affiliations": [affil.get("affilname", "") for affil in entry.get("affiliation", [])],
+                "publicationName": entry.get("prism:publicationName", ""),
+                "openAccess": entry.get("openaccessFlag", False),
                 "doi": entry.get("prism:doi", ""),
-                "eid": entry.get("eid", "")
+                "abstract": entry.get("dc:description", "")  # <-- Campo agregado
             })
 
         start += count
-        time.sleep(1)  # evitar límite de tasa de la API
+        time.sleep(1) 
 
-    # Guardar en CSV usando el método de utilidades
     save_csv(project_name, "scopus", articles)
 
     print(f"{len(articles)} artículos guardados en el proyecto '{project_name}'.")

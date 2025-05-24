@@ -1,0 +1,1 @@
+"Comparación de aprendizaje profundo y métodos tradicionales en diagnóstico automatizado de cáncer de pulmón mediante radiografías torácicas"

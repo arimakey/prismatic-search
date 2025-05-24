@@ -1,0 +1,1 @@
+("machine learning" OR "ML") AND ("computer vision" OR "image processing" OR "medical imaging") AND ("medical diagnos*" OR "disease diagnos*" OR "treatment recommend*" OR "clinical decision*") AND ("algorithm*" OR "model*" OR "deep learning" OR "neural network*")

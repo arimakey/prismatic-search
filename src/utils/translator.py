@@ -1,4 +1,4 @@
-from core import api
+from agents import api
 
 def translate_to_english(text: str) -> str:
     """Translate Spanish text to English using the AI API.

@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from rich.console import Console
-from core import api
+from agents import api
 from rich.table import Table
 from utils.file_utils import save_data_to_file
 from utils.console_formatter import print_formatted_text
@@ -13,13 +13,19 @@ console = Console()
 # Inicializar el cliente de DeepL
 deepL_translator = deepl.Translator(auth_key=os.getenv("DEEPL_API_KEY"))
 
-def generate_title(context, project_name):
+def generate_title(context):
     while True:
         # Genera el título en español
         conversation_es = [
             {
                 "role": "system",
-                "content": "Genera un título conciso y descriptivo para la revisión sistemática en español. Solo dame el título, sin explicaciones ni detalles adicionales."
+                "content": (
+                    "You are an assistant specialized in crafting concise, highly descriptive titles "
+                    "for systematic reviews.  \n"
+                    "– Output **only** the title (no explanatory text, no bullet points).  \n"
+                    "– Keep it under 20 words.  \n"
+                    "– Make sure it clearly reflects the main objective or scope of the review."
+                )
             },
             {
                 "role": "user",
@@ -38,7 +44,12 @@ def generate_title(context, project_name):
             conversation_en = [
                 {
                     "role": "system",
-                    "content": "Traduce el siguiente título al inglés. Solo dame el título en inglés, sin explicaciones adicionales."
+                    "content": (
+                        "You are a professional translator.  \n"
+                        "Translate the following Spanish title into fluent, academic‐style English.  \n"
+                        "– Output **only** the translated title.  \n"
+                        "– Do not add any explanations or annotations."
+                    )
                 },
                 {
                     "role": "user",
@@ -58,8 +69,6 @@ def generate_title(context, project_name):
         # Pregunta al usuario si le gusta el título
         confirm = input("¿Te gusta el título? (si/no): ").strip().lower()
         if confirm == "si":
-            save_data_to_file(project_name, "title_es.txt", title_es)
-            save_data_to_file(project_name, "title_en.txt", title_en)
             return {"es": title_es, "en": title_en}
         elif confirm != "no":
             print_formatted_text("[bold yellow]Entrada inválida. Por favor, escribe 'si' o 'no'.[/bold yellow]")
