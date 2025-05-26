@@ -10,36 +10,43 @@ def refine_topic_interactive(topic: str) -> str:
     console.print("[bold blue]Starting interactive refinement (PRISMA)...[/bold blue]\n")
 
     system_message = textwrap.dedent(f"""
-        You are an expert assistant in PRISMA systematic reviews.
-        Given the following topic: "{topic}", generate up to 4 brief and specific questions
-        to clarify the focus of the review, centered on:
-        1. Population or target group
-        2. Intervention or exposure
-        3. Expected outcomes
-        Do NOT ask about publication year or study type.
-        Keep the questions clear, concise, and limited to a maximum of 4.
+    You are an expert assistant in systematic reviews using the PRISMA methodology.
+    Your goal is to help the user clarify the focus of their review topic: "{topic}".
+
+    Generate exactly ONE open-ended question that helps the user reflect on and define the scope of their topic.
+    The question should encourage them to consider one of the following aspects:
+    - Which population or target group to focus on
+    - Which type of intervention, exposure, or technology to consider
+    - What kind of outcomes or effects are of most interest
+
+    The question must:
+    - Be open and exploratory (avoid assuming details the user hasn’t provided)
+    - Be phrased as a genuine inquiry to help define or narrow down the topic
+    - Avoid suggesting specific answers
+
+    Do NOT include explanations or extra text — only respond with the single question.
     """).strip()
 
+
     conversation = [{"role": "system", "content": system_message}]
-    conversation.append({"role": "user", "content": "What questions do you need to ask me to clarify this topic?"})
+    conversation.append({"role": "user", "content": "What question would help clarify this topic?"})
 
     try:
-        assistant_questions = api.get_completion(conversation)
+        assistant_question = api.get_completion(conversation, model="deepseek-reasoner")
     except Exception as e:
-        console.print(f"[bold red]Error generating questions: {e}[/bold red]")
+        console.print(f"[bold red]Error generating the question: {e}[/bold red]")
         return ""
 
-    console.print("[bold yellow]Please answer the following questions:[/bold yellow]")
-    console.print(Markdown(assistant_questions))
+    console.print("[bold yellow]Please answer the following question:[/bold yellow]")
+    console.print(Markdown(assistant_question.strip()))
 
-    user_answers = input("\nType your answers (you can use bullet points or a single block of text):\n").strip()
+    user_answer = input("\nYour answer:\n").strip()
 
     system_message_final = textwrap.dedent(f"""
-        Based on the original topic: "{topic}" and the following user answers:
-        "{user_answers}"
-        Write a refined and focused context suitable for a PRISMA systematic review.
-        Be clear, concise, and focus exclusively on the topic and its scope.
-        Do not include titles or references.
+        Based on the original topic: "{topic}" and the user's answer: "{user_answer}",
+        write a refined and focused context suitable for a PRISMA systematic review.
+        Be concise, clear, and focused only on the scope and direction of the topic.
+        Do not include any titles, lists, or references.
     """)
 
     conversation_final = [{"role": "system", "content": system_message_final}]

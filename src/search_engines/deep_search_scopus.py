@@ -1,11 +1,19 @@
 import requests
 import time
+from typing import List, Dict, Any
 
 from utils.file_utils import save_csv
 
-def download_scopus_articles(query, max_results=1000, project_name="prismatic-search"):
+def download_scopus_articles(query: str,
+                             max_results: int = 1000,
+                             project_name: str = "prismatic-search"
+                             ) -> List[Dict[str, Any]]:
+    """
+    Descarga artículos de Scopus y devuelve lista de diccionarios
+    con la estructura: title, authors, venue, year, citations, url, abstract.
+    """
     API_KEY = "ddbd21300a00b5f5da2d75c7f33a7cac"
-    url = "https://api.elsevier.com/content/search/scopus"
+    base_url = "https://api.elsevier.com/content/search/scopus"
     headers = {
         "X-ELS-APIKey": API_KEY,
         "Accept": "application/json"
@@ -22,35 +30,59 @@ def download_scopus_articles(query, max_results=1000, project_name="prismatic-se
             "start": start
         }
 
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code != 200:
-            print(f"Error en la solicitud: {response.status_code}")
+        resp = requests.get(base_url, headers=headers, params=params)
+        if resp.status_code != 200:
+            print(f"Error en la solicitud: {resp.status_code}")
             break
 
-        data = response.json()
+        data = resp.json()
         entries = data.get("search-results", {}).get("entry", [])
-
         if not entries:
             break
 
         for entry in entries:
+            # Transformar al formato deseado
+            title = entry.get("dc:title", "")
+            authors = entry.get("dc:creator", "")
+            venue = entry.get("prism:publicationName", "")
+            # Extraer año de coverDate, que viene en formato YYYY-MM-DD
+            cover_date = entry.get("prism:coverDate", "")
+            year = cover_date.split("-")[0] if cover_date else ""
+            # Conteo de citas
+            citations = 0
+            try:
+                citations = int(entry.get("citedby-count", "0"))
+            except ValueError:
+                pass
+            # URL principal (primer link)
+            url = ""
+            links = entry.get("link", [])
+            if links:
+                # Buscar el link de tipo "scopus" o fallback al primero
+                for l in links:
+                    if l.get("@ref") == "scopus":
+                        url = l.get("@href", "")
+                        break
+                else:
+                    url = links[0].get("@href", "")
+            # Abstract
+            abstract = entry.get("dc:description", "")
+
             articles.append({
-                "title": entry.get("dc:title", ""),
-                "creator": entry.get("dc:creator", ""),
-                "type": entry.get("prism:aggregationType", ""),
-                "url": entry.get("link", [])[0].get("@href", "") if entry.get("link") else "",
-                "coverDate": entry.get("prism:coverDate", ""),
-                "citedbyCount": entry.get("citedby-count", ""),
-                "affiliations": [affil.get("affilname", "") for affil in entry.get("affiliation", [])],
-                "publicationName": entry.get("prism:publicationName", ""),
-                "openAccess": entry.get("openaccessFlag", False),
-                "doi": entry.get("prism:doi", ""),
-                "abstract": entry.get("dc:description", "")  # <-- Campo agregado
+                "title":        title,
+                "authors":      authors,
+                "venue":        venue,
+                "year":         year,
+                "citations":    citations,
+                "url":          url,
+                "abstract":     abstract
             })
 
         start += count
-        time.sleep(1) 
+        time.sleep(1)  # para respetar rate limits
 
+    # Guardar en CSV usando la misma utilidad
     save_csv(project_name, "scopus", articles)
-
     print(f"{len(articles)} artículos guardados en el proyecto '{project_name}'.")
+
+    return articles

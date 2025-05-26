@@ -16,13 +16,13 @@ client = OpenAI(
 # Inicializar la consola de Rich
 console = Console()
 
-def get_completion(messages):
+def get_completion(messages, model="deepseek-chat"):
     """Obtiene la respuesta del modelo."""
     try:
         # Mostrar animación de 'escribiendo...' mientras se espera la respuesta
         with Status("[bold cyan]Escribiendo...[/bold cyan]", spinner="dots", console=console) as status:
             response = client.chat.completions.create(
-                model="deepseek-chat", 
+                model=model, 
                 messages=messages,
                 temperature=0.7,
                 max_tokens=1000

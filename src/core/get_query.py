@@ -7,31 +7,36 @@ load_dotenv()
 console = Console()
 
 def generate_query(title, context):
-        conversation = [
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert in constructing database search strategies.  \n"
-                    "Combine the provided title and context into a single-line Boolean query.  \n"
-                    "– Use only full words and Boolean operators (AND, OR, NOT) for logical grouping.  \n"
-                    "– Do not use symbols like asterisks (*), greater than (>) or less than (<).  \n"
-                    "– Use synonyms and related terms in logical groupings.  \n"
-                    "– Follow this example style: (\"M2M\" OR \"machine to machine\") AND (\"cost\" OR \"efficiency\") AND (\"supply chain\" OR \"logistics\" OR \"inventory management\").  \n"
-                    "Output only the one-line query, without any extra commentary."
-                )
-            },
-            {
+    conversation = [
+        {
+            "role": "system",
+            "content": (
+                "You are an expert in designing precise search strategies for academic databases. "
+                "Generate a concise one-line boolean search query in English that combines the core concepts from the title and context. "
+                "Use only the boolean operators AND, OR, and parentheses '(' and ')' for logical grouping. "
+                "Avoid using NOT, asterisks (*), symbols like > or <, or any truncation. "
+                "Favor specificity: prefer AND over OR to narrow the scope and reduce irrelevant results. "
+                "Use only complete, meaningful words with no extra punctuation or modifiers. "
+                "Phrases containing more than one word must be enclosed in double quotes. "
+                "The goal is to produce a focused and high-precision query. "
+                "Output only the final query on a single line with no explanations or extra text."
+                "Make the query granular, preferably word by word connected"
+                "Query only in English, do not translate it to Spanish. "
+            )
+
+        },
+        {
             "role": "user",
-            "content": f"Title: {title['en']}\\nContext: {context}"
-            }
-        ]
-        query = api.get_completion(conversation)
+            "content": f"Title: {title['en']}\nContext: {context}"
+        }
+    ]
+    query = api.get_completion(conversation, model="deepseek-reasoner")
 
-        # Display the generated query in a table
-        table = Table(title="Generated Query")
-        table.add_column("Query", style="cyan")
-        table.add_row(query)
-        console.print("\\n")
-        console.print(table)
+    # Display the generated query in a table
+    table = Table(title="Generated Query")
+    table.add_column("Query", style="cyan")
+    table.add_row(query)
+    console.print("\n")
+    console.print(table)
 
-        return query
+    return query
